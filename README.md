@@ -1,43 +1,28 @@
-# HTCondor Mini‑Cluster Benchmark Suite
+# HTCondor Mini‑Cluster Benchmark & Stress Test Suite
 
-This repository contains a lightweight benchmarking suite designed for
-**small HTCondor clusters** used in instructional or experimental settings. It
-is intended for use on clusters consisting of
-**one head node and a small number of compute nodes** (e.g., 3 worker nodes),
-each with modest hardware (older desktop PCs with ~8 GB RAM).
+This repository contains a **self‑contained benchmarking and stress‑testing suite** designed for **small HTCondor (High‑Throughput Computing) clusters** used in instructional or experimental environments.
 
-The benchmarks are written in **pure Python**, require no special libraries,
-and are orchestrated using **HTCondor DAGMan**.
+It is intended for clusters consisting of:
+- 1 head node
+- 3 (or a small number of) execute nodes
+- Modest, heterogeneous hardware (e.g., Dell Optiplex 5040/5050/5060)
+- ~8 GB RAM per execute node
 
----
-
-## Goals of This Benchmark
-
-This benchmark suite is designed to:
-
-- Compare **hardware performance** across similar but non‑identical nodes
-- Observe **HTCondor scheduling behavior** on small clusters
-- Measure **CPU, memory, and disk I/O performance**
-- Provide repeatable, comparable results across student groups
-- Reinforce best practices for HTC experimentation
-
-Each benchmark is run **three times** to allow calculation of averages and
-variability.
+All workloads are implemented in **pure Python**, require no external libraries, and are orchestrated using **HTCondor DAGMan**.
 
 ---
 
-## Cluster Assumptions
+## Design Goals
 
-This benchmark assumes:
+This suite is designed to:
 
-- HTCondor is already installed and configured
-- Python 3 is available on all execute nodes
-- Each compute node has:
-  - ~8 GB RAM
-  - Local disk storage available for scratch files
-- Jobs are allowed to run in the current working directory
+- Measure **CPU, memory, disk I/O, and scheduler performance**
+- Compare performance across **similar but non‑identical nodes**
+- Demonstrate **HTCondor job scheduling and queueing behavior**
+- Provide **repeatable, defensible benchmarks** suitable for grading
+- Expose students to **long‑running, restart‑safe HTC workloads**
 
-No MPI, GPUs, or special kernel features are required.
+Benchmarks use **fixed amounts of work** (not time‑limited loops), so faster machines finish sooner and slower machines take longer.
 
 ---
 
@@ -46,159 +31,206 @@ No MPI, GPUs, or special kernel features are required.
 ```
 .
 ├── scripts/
-│   ├── cpu_single.py
+│   ├── cpu_info.py
 │   ├── cpu_parallel.py
+│   ├── cpu_single.py
+│   ├── io_stress.py
 │   ├── memory_stress.py
-│   └── io_test.py
+│   └── stess_test.py
 │
 ├── benchmark.dag
-├── cpu_single.submit
 ├── cpu_parallel.submit
+├── cpu_single.submit
 ├── memory.submit
 ├── io.submit
+│
+├── stress_test.dag
+├── stress.submit
+│
 └── README.md
 ```
 
 ---
 
-## Benchmarks Included
+## Short Benchmarks (≈ 1–2 Minutes Each)
+
+These benchmarks are orchestrated by **`benchmark.dag`**. Each job is queued **three times** to allow averaging and variance analysis.
 
 ### 1. CPU Single‑Core Benchmark (`cpu_single.py`)
-- Computes prime numbers up to a fixed limit
-- Uses a single CPU core
-- Measures raw single‑thread performance
-- Useful for comparing different CPU generations
+- Fixed prime‑checking workload
+- Single‑threaded
+- Measures sustained integer and branch performance
+- Sensitive to CPU generation and clock speed
 
-Each run produces a JSON‑formatted result with execution time.
+**Primary metric:** `elapsed_seconds`
 
 ---
 
-### 2. CPU Throughput / Scheduler Stress (`cpu_parallel.py`)
-- Integer arithmetic workload
-- Multiple identical jobs submitted simultaneously
+### 2. CPU Throughput / Parallel Benchmark (`cpu_parallel.py`)
+- Fixed integer arithmetic loop
+- Multiple jobs queued simultaneously
 - Designed to exceed available slots
-- Measures:
-  - Queueing behavior
-  - Fairness
-  - Overall throughput
+- Highlights **HTCondor scheduling, throughput, and fairness**
 
-This benchmark highlights how HTCondor schedules jobs under load.
+**Primary metric:** `elapsed_seconds`
 
 ---
 
 ### 3. Memory Stress Benchmark (`memory_stress.py`)
-- Allocates ~1.5–2 GB of memory
-- Sequentially touches memory to force real allocation
-- Safe for nodes with 8 GB RAM
-- Reveals:
-  - Memory bandwidth
-  - Swapping or eviction issues
-  - Node instability under load
+- Fixed number of memory passes over a large byte array
+- Uses < 1 GB RAM and is safe for 8 GB nodes
+- Exposes memory bandwidth and cache behavior
+
+**Primary metric:** `elapsed_seconds`
 
 ---
 
 ### 4. Disk I/O Benchmark (`io_test.py`)
-- Writes and deletes a 512 MB file
-- Tests local disk performance
-- Useful on older PCs where storage varies widely
-- Highlights filesystem and disk differences
+- Repeated fixed‑size write/read/delete cycles
+- Measures sustained filesystem and disk performance
+- Highly effective at revealing HDD vs SSD differences
+
+**Primary metric:** `elapsed_seconds`
 
 ---
 
-## Repeated Execution
+## Long‑Running Stress Test (10–60 Minutes)
 
-Each benchmark is run **three times** using HTCondor’s `queue` mechanism.
+The stress test is defined separately and is orchestrated by **`stress_test.dag`**.
 
-Output files are uniquely named using the `$(Process)` macro, for example:
+### Stress Test (`stress_test.py`)
 
-```
-cpu_single_run0.out
-cpu_single_run1.out
-cpu_single_run2.out
-```
+This test simulates a realistic long‑running HTC workload:
 
-This allows students to compute:
-- Mean execution time
-- Variability (standard deviation)
-- Node‑to‑node differences
+- Fixed total number of computational steps
+- Mixed CPU and memory activity
+- Maximum memory usage ≈ 1 GB
+- Periodic checkpointing to disk
+- Safe to preempt, evict, or restart
+- Multiple jobs may run concurrently
+
+Checkpoint files allow jobs to resume automatically if interrupted.
+
+**Primary metric:** `elapsed_seconds`
 
 ---
 
-## Running the Benchmark Suite
+## Checkpointing Behavior
 
-From the directory containing the files:
+The stress test writes a JSON checkpoint file at regular intervals containing:
+- Current progress step
+- Partial checksum
+- Original job start time
+
+If a job is restarted, it resumes automatically from the most recent checkpoint and continues accumulating total runtime.
+
+This demonstrates:
+- Fault tolerance
+- The cost of checkpointing
+- Realistic long‑running HTC job design
+
+---
+
+## Standardized CPU & System Reporting
+
+All benchmarks and stress tests emit **structured JSON output** with a consistent schema.
+
+Each job records:
+- Execute node hostname
+- CPU model name
+- CPU frequency information
+- Core and thread counts
+- Cache sizes
+- Kernel and architecture
+
+This information is collected **inside the job** using `lscpu`, ensuring accurate per‑job hardware identification even on heterogeneous clusters.
+
+### Example Output Structure
+
+```json
+{
+  "benchmark": "cpu_single",
+  "workload": { ... },
+  "results": {
+    "elapsed_seconds": 83.42
+  },
+  "system": {
+    "hostname": "compute-02",
+    "model_name": "Intel(R) Core(TM) i5-6500 CPU @ 3.20GHz",
+    "cpu_max_mhz": "3200.0000",
+    "cpu_s": "4",
+    "core_s_per_socket": "4",
+    "thread_s_per_core": "1"
+  }
+}
+```
+
+---
+
+## Running the Benchmarks
+
+### Short Benchmarks
 
 ```bash
 condor_submit_dag benchmark.dag
 ```
 
-You can monitor progress using:
+### Long Stress Test
+
+```bash
+condor_submit_dag stress_test.dag
+```
+
+Monitor execution with:
 
 ```bash
 condor_q
 condor_job_queue_stats
 ```
 
-After completion, output files will contain JSON‑formatted results.
-
 ---
 
 ## Interpreting Results
 
-Each `.out` file contains structured output similar to:
+Because each benchmark performs **the same fixed amount of work**, comparisons are based on:
 
-```json
-{
-  "benchmark": "cpu_single",
-  "hostname": "compute-node-1",
-  "time_seconds": 2.341,
-  "primes_found": 5133
-}
-```
+- Lower runtime → better performance
+- Variability across runs → system noise or contention
+- Differences across nodes → hardware effects
 
-Students are encouraged to:
-- Aggregate results across runs
-- Compare performance between nodes
-- Identify scheduling effects
-- Explain observed variance
+Students are encouraged to compute:
+- Means and standard deviations
+- Speedups relative to a baseline node
+- Scheduler throughput metrics
 
 ---
 
-## Suggested Student Analysis Questions
+## Safety and Resource Limits
 
-- Why do some runs take longer than others?
-- How does node hardware affect performance?
-- What happens when more jobs are queued than CPU slots?
-- How consistent are memory and I/O measurements?
-- Which benchmark shows the most variability, and why?
+- All jobs are non‑privileged user processes
+- Memory usage is explicitly capped
+- Disk usage is temporary and cleaned automatically
+- Stress test includes runtime limits in submit files
 
----
-
-## Safety and Resource Considerations
-
-- Memory usage is intentionally capped to avoid exhausting 8 GB nodes
-- Disk I/O files are deleted automatically
-- CPU workloads are finite and intentionally modest
-- Jobs are non‑privileged and safe for shared instructional clusters
+These benchmarks are safe to run on shared instructional clusters.
 
 ---
 
-## Extending This Benchmark
+## Educational Use
 
-Possible extensions include:
-- Automated result aggregation scripts
-- Plotting results with pandas/matplotlib
-- Pinning jobs to specific nodes
-- Varying `request_cpus` or memory limits
-- Scaling to larger clusters
+This suite is designed for:
+- Undergraduate HTC / distributed systems courses
+- Introductory cluster computing labs
+- Scheduler and systems performance experiments
 
----
-
-## License and Usage
-
-This benchmark is intended for **educational use**. Instructors are
-encouraged to modify and adapt it to their course needs.
+Instructors are encouraged to adapt parameters and workloads to suit their environment.
 
 ---
 
-If you have suggestions or improvements, feel free to fork and extend this suite.
+## License
+
+This code is intended for **educational use**. You are free to modify and redistribute it for teaching and academic purposes.
+
+---
+
+If you have suggestions or improvements, feel free to extend this suite.
