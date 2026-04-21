@@ -1,9 +1,10 @@
 import time
 import json
-import platform
+from cpu_info import get_cpu_info
 
-ITERATIONS = 1_000_000_000   # <<< calibrate once
+ITERATIONS = 1_000_000_000
 
+cpu_info = get_cpu_info()
 start_time = time.time()
 
 x = 0
@@ -12,10 +13,16 @@ for i in range(ITERATIONS):
 
 elapsed = time.time() - start_time
 
-print(json.dumps({
+result = {
     "benchmark": "cpu_parallel",
-    "hostname": platform.node(),
-    "iterations": ITERATIONS,
-    "checksum": x,
-    "elapsed_seconds": round(elapsed, 2)
-}))
+    "workload": {
+        "iterations": ITERATIONS
+    },
+    "results": {
+        "checksum": x,
+        "elapsed_seconds": round(elapsed, 2)
+    },
+    "system": cpu_info
+}
+
+print(json.dumps(result, indent=2))

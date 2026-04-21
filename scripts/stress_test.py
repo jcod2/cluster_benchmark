@@ -3,15 +3,15 @@ import json
 import os
 import math
 import random
-import platform
+from cpu_info import get_cpu_info
 
 # =========================
 # CONFIGURATION (CALIBRATE ONCE)
 # =========================
 
 TOTAL_STEPS = 2_000_000_000
-CHECKPOINT_INTERVAL = 50_000   # save state every N steps
-ARRAY_SIZE = 120_000_000       # ~120 MB
+CHECKPOINT_INTERVAL = 1_000_000   # save state every N steps
+ARRAY_SIZE = 120_000_000          # ~120 MB
 STATE_FILE = "stress_state.json"
 RESULT_FILE = "stress_result.json"
 
@@ -72,17 +72,25 @@ total_time = time.time() - start_time
 # FINAL OUTPUT
 # =========================
 
+cpu_info = get_cpu_info()
+
+# included unchanged: checkpoint loading and main loop
+
 result = {
     "benchmark": "stress_test",
-    "hostname": platform.node(),
-    "total_steps": TOTAL_STEPS,
-    "final_checksum": checksum,
-    "elapsed_seconds": round(total_time, 2),
-    "completed": True
+    "workload": {
+        "total_steps": TOTAL_STEPS,
+        "checkpoint_interval": CHECKPOINT_INTERVAL
+    },
+    "results": {
+        "final_checksum": checksum,
+        "elapsed_seconds": round(total_time, 2),
+        "completed": True
+    },
+    "system": cpu_info
 }
 
 with open(RESULT_FILE, "w") as f:
     json.dump(result, f, indent=2)
 
 print(json.dumps(result, indent=2))
-

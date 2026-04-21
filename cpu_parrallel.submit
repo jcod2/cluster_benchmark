@@ -1,11 +1,10 @@
 executable = cpu_parallel.py
 
-output     = cpu_parallel_run$(Process).out
-error      = cpu_parallel_run$(Process).err
+output     = cpu_parallel_job_$(Cluster)_$(Process)_$(Machine).out
+error      = cpu_parallel_job_$(Cluster)_$(Process)_$(Machine).err
 log        = cpu_parallel.log
 
 request_cpus = 1
 request_memory = 512MB
 
-queue 6
-
+queue 36

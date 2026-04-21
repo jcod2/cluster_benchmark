@@ -1,7 +1,7 @@
 executable = stress_test.py
 
-output     = stress_$(Cluster)_$(Process).out
-error      = stress_$(Cluster)_$(Process).err
+output     = stress_job_$(Cluster)_$(Process)_$(Machine).out
+error      = stress_job_$(Cluster)_$(Process)_$(Machine).err
 log        = stress.log
 
 request_cpus   = 1
@@ -11,5 +11,4 @@ request_disk   = 2GB
 +MaxRuntime = 43200         # 12 hours (safety)
 kill_sig = SIGTERM
 
-queue 4
-
+queue 36
