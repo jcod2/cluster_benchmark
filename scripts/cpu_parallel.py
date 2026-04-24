@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import time
 import json
 from cpu_info import get_cpu_info

@@ -1,10 +1,11 @@
 executable = memory_stress.py
 
-output     = memory_job_$(Cluster)_$(Process)_$(Machine).out
-error      = memory_job_$(Cluster)_$(Process)_$(Machine).err
-log        = memory.log
+output     = output/memory_job_$(Cluster)_$(Process)_$(Machine).out
+error      = err/memory_job_$(Cluster)_$(Process)_$(Machine).err
+log        = logs/memory.log
 
 request_cpus = 1
 request_memory = 2GB
+transfer_input_files = scripts/
 
 queue 36

@@ -1,12 +1,13 @@
 executable = stress_test.py
 
-output     = stress_job_$(Cluster)_$(Process)_$(Machine).out
-error      = stress_job_$(Cluster)_$(Process)_$(Machine).err
-log        = stress.log
+output     = output/stress_job_$(Cluster)_$(Process)_$(Machine).out
+error      = err/stress_job_$(Cluster)_$(Process)_$(Machine).err
+log        = logs/stress.log
 
 request_cpus   = 1
 request_memory = 1GB
 request_disk   = 2GB
+transfer_input_files = scripts/
 
 +MaxRuntime = 43200         # 12 hours (safety)
 kill_sig = SIGTERM
