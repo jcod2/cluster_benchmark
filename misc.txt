@@ -1,0 +1,1 @@
+find err/ -name "*.err" -size +0
