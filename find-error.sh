@@ -1,6 +1,6 @@
 #!/bin/bash
-# check_errors.sh
-# Usage: bash check_errors.sh [err_dir]
+# find-errors.sh
+# Usage: bash find-errors.sh [err_dir]
 
 ERR_DIR=${1:-err}   # default to ./err, or pass a custom path
 
