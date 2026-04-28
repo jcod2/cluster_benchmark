@@ -1,4 +1,4 @@
-executable = stress_test.py
+executable = scripts/stress_test.py
 
 output     = output/stress_job_$(Cluster)_$(Process)_$(Machine).out
 error      = err/stress_job_$(Cluster)_$(Process)_$(Machine).err

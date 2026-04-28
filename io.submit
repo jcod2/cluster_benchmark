@@ -1,4 +1,4 @@
-executable = io_test.py
+executable = scripts/io_test.py
 
 output     = output/io_job_$(Cluster)_$(Process)_$(Machine).out
 error      = err/io_job_$(Cluster)_$(Process)_$(Machine).err

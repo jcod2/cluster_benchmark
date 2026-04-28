@@ -1,4 +1,4 @@
-executable = cpu_single.py
+executable = scripts/cpu_single.py
 arguments  =
 output     = output/cpu_single_job_$(Cluster)_$(Process)_$(Machine).out
 error      = err/cpu_single_job_$(Cluster)_$(Process)_$(Machine).err
