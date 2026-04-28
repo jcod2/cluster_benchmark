@@ -1,4 +1,4 @@
-executable = scripts/memory_stress.py
+executable = memory_stress.py
 
 output     = output/memory_job_$(Cluster)_$(Process)_$(Machine).out
 error      = err/memory_job_$(Cluster)_$(Process)_$(Machine).err

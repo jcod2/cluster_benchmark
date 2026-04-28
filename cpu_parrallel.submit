@@ -1,4 +1,4 @@
-executable = scripts/cpu_parallel.py
+executable = cpu_parallel.py
 
 output     = output/cpu_parallel_job_$(Cluster)_$(Process)_$(Machine).out
 error      = err/cpu_parallel_job_$(Cluster)_$(Process)_$(Machine).err
